@@ -14,6 +14,7 @@ Shader "Fractal/Fractal"
         _JuliaRoot ("JuliaRoot" , vector) = (0.1 , 0.7 , 0 , 0)
         _IsPickover ("IsPickover" , int) = 1
         _FractalFade ("FractalFade" , range(0.0 , 1.0)) = 1.0
+        _ShowRoot ("ShowRoot" , int) = 0
     }
     SubShader
     {
@@ -54,6 +55,7 @@ Shader "Fractal/Fractal"
             float _ColorCycle;
             float _Rot;
             int _FractalType;
+            int _ShowRoot;
             
             float2 _JuliaRoot;
             float _PickoverScale;
@@ -80,25 +82,41 @@ Shader "Fractal/Fractal"
                 float2 escz;
                 float2 rlinez;
                 float2 linez;
+                float2 pos;
 
-                // This is MandelBrot (!Julia)
+                //if (_ShowRoot == 1 && )
+                //{
+                //    return float4(_JuliaRoot.x , _JuliaRoot.y , 0 , 1);
+                //} 
+
+                // This is MandelBrot
                 if (_FractalType == 0) {
                     c = rotate((i.uv) , 0 , _Rot) * _Area.zw + _Area.xy;
                     c /= 100;
                     z = 0;
-
+                    pos = c;
                 } else if (_FractalType == 1){
 
                 // Julia
                     z = rotate(((i.uv)) , 0 , _Rot) * _Area.zw + _Area.xy;
                     z /= 100;
-                    c = float2(0.1 , 0.7);
+                    c = float2(_JuliaRoot.x, _JuliaRoot.y);
+                    pos = z;
                 } else if (_FractalType == 2) {
+                // Burning Ship
                     c = rotate(((i.uv)) , 0 , _Rot) * _Area.zw + _Area.xy;
                     c /= 100;
-                    z = float2(0.1 , 0.7);
+                    z = float2(_JuliaRoot.x , _JuliaRoot.y);
+                    pos = c;
                 }
 
+                if (_ShowRoot == 1)
+                {
+                    if (length(pos - _JuliaRoot) < 0.025)
+                    {
+                        return float4(0.5 , 0 , 0 , 1);
+                    }
+                }
 
                 float n;
                 float escaped;

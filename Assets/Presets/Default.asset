@@ -10,10 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 02e8e919fc8274635bbb5a7b938cfc19, type: 3}
-  m_Name: Default2
+  m_Name: Default
   m_EditorClassIdentifier: 
   name: Default
   type: 0
   scint: 3
   screenpos: {x: -25, y: 0}
   pickoverlinear: -2.590267
+  root: {x: 0, y: 0}

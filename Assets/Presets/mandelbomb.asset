@@ -10,10 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 02e8e919fc8274635bbb5a7b938cfc19, type: 3}
-  m_Name: mandelbomb2
+  m_Name: mandelbomb
   m_EditorClassIdentifier: 
   name: mandelbomb
   type: 0
   scint: 1.7469069
   screenpos: {x: -22.138426, y: 59.406685}
   pickoverlinear: 0.87950057
+  root: {x: 0, y: 0}

@@ -10,10 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 02e8e919fc8274635bbb5a7b938cfc19, type: 3}
-  m_Name: threadexchange2
+  m_Name: threadexchange
   m_EditorClassIdentifier: 
   name: threadexchange
   type: 0
   scint: 1.053714
   screenpos: {x: -16.06603, y: 59.807934}
   pickoverlinear: -0.31915316
+  root: {x: 0, y: 0}

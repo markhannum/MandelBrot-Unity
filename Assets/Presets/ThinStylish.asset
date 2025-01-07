@@ -10,10 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 02e8e919fc8274635bbb5a7b938cfc19, type: 3}
-  m_Name: ThinStylish2
+  m_Name: ThinStylish
   m_EditorClassIdentifier: 
   name: ThinStylish
   type: 0
   scint: 0.5615601
   screenpos: {x: -18.71329, y: -83.63317}
   pickoverlinear: 0.8074141
+  root: {x: 0, y: 0}

@@ -25,12 +25,28 @@ public class MandleBrotZoom : MonoBehaviour
     private float pickovermin = -9f;
     private float pickovermax = 8.5f;
 
-    public float juliaroot_x = 0.1f;
-    public float juliaroot_y = 0.7f;
+    //public float juliaroot_x = 0.1f;
+    //public float juliaroot_y = 0.7f;
+    public Vector2 juliaroot = new Vector2(0.1f, 0.7f);
 
     public int FractalType = 0;
     public int isJuliaTarget = 0;
     public int keydowncount = 0;
+
+    public Image backgroundimage;
+    private float originalbackgroundalpha;
+    public TextMeshProUGUI titletext;
+    private Color titleColor;
+    private Vector3 titlePosition;
+    private bool startup = true;
+    private int startup_stage = 0;
+    private float startstage_time;
+
+    private float title_fadein = 1f;
+    private float title_pause = 1.5f;
+    private float title_rise_fadeout = 1f;
+    private float title_post_pause = 0f;
+    private float background_fade_time = 1f;
 
     public GameObject ui;
     public GameObject fractalselectionui;
@@ -93,14 +109,28 @@ public class MandleBrotZoom : MonoBehaviour
         Preset2SO randomPreset = presetList2.presets[randomIndex];
 
         FractalType = randomPreset.type;
+        isJuliaTarget = FractalType;
         scint = randomPreset.scint;
         screenpos = randomPreset.screenpos;
         pickoverlinear = randomPreset.pickoverlinear;
+        juliaroot = randomPreset.root;
     }
 
     // Start is called before the first frame update
     void Start()
     {
+        startup = true;
+        startstage_time = Time.time;
+        //originalbackgroundcolor = backgroundimage.color;
+        originalbackgroundalpha = backgroundimage.color.a;
+
+        /* Dumb getter/setter syntax */
+        titleColor = titletext.color;
+        Color newColor = titleColor;
+        newColor.a = 0f;
+        titletext.color = newColor;
+
+        titlePosition = titletext.rectTransform.localPosition;
         screenscale = .2f;
 
         screenpos = new Vector2(-25f, 0);
@@ -168,6 +198,7 @@ public class MandleBrotZoom : MonoBehaviour
         preset.scint = scint;
         preset.screenpos = screenpos;
         preset.pickoverlinear = pickoverlinear;
+        preset.root = juliaroot;
         AssetDatabase.CreateAsset(preset, "Assets/Presets/" + saveuiname.text + ".asset");
         presetList2.presets.Add(preset);
         EditorUtility.SetDirty(presetList2);
@@ -221,6 +252,9 @@ public class MandleBrotZoom : MonoBehaviour
                 fractalfadeout = false;
                 MandleBrot.SetFloat("_FractalFade" , 0);
                 FractalType = isJuliaTarget;
+                if (FractalType == 1 || FractalType == 2) {
+                    juliaroot = new Vector2(0.1f, 0.7f);
+                }
                 fractalfadein = true;
                 fractalchange = Time.time;
             }
@@ -316,10 +350,81 @@ public class MandleBrotZoom : MonoBehaviour
         uifinished = false;
     }
 
+    void StartupUpdate()
+    {
+        /* Stage 0 : fade-in */
+        if (startup_stage == 0) {
+            float t = (Time.time - startstage_time) / title_fadein;
+            if ((Time.time - startstage_time) > title_fadein) {
+                t = 1f;
+                startup_stage = 1;
+                startstage_time = Time.time;
+            }
+            Color newColor = titletext.color;
+            newColor.a = t;
+            titletext.color = newColor;
+            return;
+        }
+
+        if (startup_stage == 1) {
+            if ((Time.time - startstage_time) > title_pause) {
+                startup_stage = 2;
+                startstage_time = Time.time;
+            }
+            return;
+        }
+        if (startup_stage == 2) {
+            float t = (Time.time - startstage_time) / title_rise_fadeout;
+            if ((Time.time - startstage_time) > title_rise_fadeout) {
+                t = 1f;
+                startup_stage = 3;
+                startstage_time = Time.time;
+            }
+            Color newColor = titletext.color;
+            newColor.a = (1f - t);
+            titletext.color = newColor;
+            return;
+        }
+
+        if (startup_stage == 3) {
+            if ((Time.time - startstage_time) > title_post_pause) {
+                startup_stage = 4;
+                startstage_time = Time.time;
+            }
+            return;
+        }
+
+        if (startup_stage == 4) {
+            float t = (Time.time - startstage_time) / background_fade_time;
+            float a = Mathf.Lerp(originalbackgroundalpha, 0f, t);
+            if ((Time.time - startstage_time) > background_fade_time) {
+                t = 1f;
+                startup_stage = 5;
+                startstage_time = Time.time;
+                ui.SetActive(false);
+                //startup = false;
+                /* TODO: reset background color && make ui inactive .. */
+            }
+            Color newColor = backgroundimage.color;
+            newColor.a = a;
+            backgroundimage.color = newColor;
+        }
+
+        if (startup_stage == 5) {
+            Color newColor = backgroundimage.color;
+            fractalselectionui.SetActive(true);
+            newColor.a = originalbackgroundalpha;
+            backgroundimage.color = newColor;
+            startup = false;
+        }
+    }
 
     // Update is called once per frame
     void Update()
     {
+        if (startup) {
+            StartupUpdate();
+        }
         /*
            image.uvRect.xMax = screenpos.x + screenscale.x;
            image.uvRect.xMin = screenpos.x - screenscale.x;
@@ -327,7 +432,9 @@ public class MandleBrotZoom : MonoBehaviour
            image.uvRect.yMin = screenpos.y - screenscale.y;
            */
 
-        if (uiactive || uifadein || uifadeout || fractalfadein || fractalfadeout) {
+        int showroot = 0;
+        if (!startup && 
+                (uiactive || uifadein || uifadeout || fractalfadein || fractalfadeout)) {
             if (fractalfadein || fractalfadeout) {
                 FractalFadeUpdate();
             }
@@ -368,7 +475,7 @@ public class MandleBrotZoom : MonoBehaviour
         bool scint_changed = false;
 
         // Keyboard zoom 
-        if (!uiactive && !uifadeout && !uifadein) {
+        if (!startup && (!uiactive && !uifadeout && !uifadein)) {
 
             if (Input.GetKey("i"))
             {
@@ -397,7 +504,7 @@ public class MandleBrotZoom : MonoBehaviour
             */
         }
         // touch zoom
-        if (!uiactive && !uifadeout && !uifadein) {
+        if (!startup && (!uiactive && !uifadeout && !uifadein)) {
             if (Input.touchCount == 2 && !uiactive && !uifadeout && !uifadein) {
 
                 Touch touch0 = Input.GetTouch(0);
@@ -418,7 +525,7 @@ public class MandleBrotZoom : MonoBehaviour
             }
         }
 
-        if (!uiactive && !uifadeout && !uifadein) {
+        if (!startup && (!uiactive && !uifadeout && !uifadein)) {
             if (Input.GetKey("q"))
             {
                 rot += Time.deltaTime;
@@ -464,10 +571,10 @@ public class MandleBrotZoom : MonoBehaviour
                 MandleBrot.SetInt("_IsPickover" , ispickover);
             }
 
-//            if (Input.GetKeyDown(KeyCode.C))
-//            {
-//                ReadDirectoryPresets();
-//            }
+            if (Input.GetKey(KeyCode.C))
+            {
+                showroot = 1;
+            }
 
             if (Input.GetKey(KeyCode.P)) {
 
@@ -493,11 +600,11 @@ public class MandleBrotZoom : MonoBehaviour
 
         first = false;
         Vector2 move = new Vector2(0 , 0);
-        if (!uiactive && !uifadeout && !uifadein) {
+        if (!startup && (!uiactive && !uifadeout && !uifadein)) {
             move = new Vector2(Input.GetAxis("Horizontal") * Time.deltaTime , Input.GetAxis("Vertical") * Time.deltaTime) * screenscale * 10;
         }
 
-        if (!uiactive && !uifadein && !uifadeout) {
+        if (!startup && (!uiactive && !uifadein && !uifadeout)) {
             if (Input.touchCount == 1) {
                 Touch touch = Input.GetTouch(0);
                 if (touch.phase == TouchPhase.Began) {
@@ -539,6 +646,8 @@ public class MandleBrotZoom : MonoBehaviour
         MandleBrot.SetFloat("_Rot" , rot);
         MandleBrot.SetFloat("_PickoverScale" , pickoverscale);
         MandleBrot.SetInt("_FractalType" , FractalType);
+        MandleBrot.SetVector("_JuliaRoot" , new Vector4(juliaroot.x, juliaroot.y, 0f, 0f));
+        MandleBrot.SetInt("_ShowRoot", showroot);
 
         shift += Time.deltaTime * 1;
     }

@@ -10,10 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 02e8e919fc8274635bbb5a7b938cfc19, type: 3}
-  m_Name: darkcrawl2
+  m_Name: darkcrawl
   m_EditorClassIdentifier: 
   name: darkcrawl
   type: 0
   scint: 0.6281306
   screenpos: {x: -41.278496, y: 57.837605}
   pickoverlinear: -2.5320563
+  root: {x: 0, y: 0}

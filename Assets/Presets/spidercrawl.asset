@@ -10,10 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 02e8e919fc8274635bbb5a7b938cfc19, type: 3}
-  m_Name: spidercrawl2
+  m_Name: spidercrawl
   m_EditorClassIdentifier: 
   name: spidercrawl
   type: 0
   scint: 1.8401936
   screenpos: {x: -20.45484, y: 55.014038}
   pickoverlinear: 1.444253
+  root: {x: 0, y: 0}
