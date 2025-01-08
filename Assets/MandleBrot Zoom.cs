@@ -39,14 +39,15 @@ public class MandleBrotZoom : MonoBehaviour
     private Color titleColor;
     private Vector3 titlePosition;
     private bool startup = true;
-    private int startup_stage = 0;
+    private int startup_stage = -1;
     private float startstage_time;
 
     private float title_fadein = 1f;
     private float title_pause = 1.5f;
     private float title_rise_fadeout = 1f;
+    private float title_rise_distance = 30f;
     private float title_post_pause = 0f;
-    private float background_fade_time = 1f;
+    private float background_fade_time = 1.5f;
 
     public GameObject ui;
     public GameObject fractalselectionui;
@@ -350,8 +351,35 @@ public class MandleBrotZoom : MonoBehaviour
         uifinished = false;
     }
 
+    IEnumerator FadeBackground()
+    {
+        float t = 0f;
+        float target = title_fadein + title_pause + title_rise_fadeout + title_post_pause + background_fade_time;
+        Color newColor;
+        while (t < target) {
+            t += Time.deltaTime;
+            float a = Mathf.Lerp(originalbackgroundalpha, 0f, t / target);
+            newColor = backgroundimage.color;
+            newColor.a = a;
+            backgroundimage.color = newColor;
+            yield return null;
+        }
+        ui.SetActive(false);
+        fractalselectionui.SetActive(true);
+        newColor = backgroundimage.color;
+        newColor.a = originalbackgroundalpha;
+        backgroundimage.color = newColor;
+        startup = false;
+    }
+
     void StartupUpdate()
     {
+        if (startup_stage == -1) {
+            startup_stage = 0;
+            startstage_time = Time.time;
+            StartCoroutine(FadeBackground());
+        }
+
         /* Stage 0 : fade-in */
         if (startup_stage == 0) {
             float t = (Time.time - startstage_time) / title_fadein;
@@ -383,6 +411,11 @@ public class MandleBrotZoom : MonoBehaviour
             Color newColor = titletext.color;
             newColor.a = (1f - t);
             titletext.color = newColor;
+
+            Vector3 targetpos = titlePosition + new Vector3(0, title_rise_distance, 0);
+            Vector3 newpos = Vector3.Lerp(titlePosition, targetpos, t);
+            titletext.rectTransform.localPosition = newpos;
+
             return;
         }
 
@@ -394,7 +427,13 @@ public class MandleBrotZoom : MonoBehaviour
             return;
         }
 
+        /*
         if (startup_stage == 4) {
+            if ((Time.time - startstage_time) > background_fade_time) {
+                startup_stage = 5;
+                startstage_time = Time.time;
+                ui.SetActive(false);
+            }
             float t = (Time.time - startstage_time) / background_fade_time;
             float a = Mathf.Lerp(originalbackgroundalpha, 0f, t);
             if ((Time.time - startstage_time) > background_fade_time) {
@@ -402,8 +441,6 @@ public class MandleBrotZoom : MonoBehaviour
                 startup_stage = 5;
                 startstage_time = Time.time;
                 ui.SetActive(false);
-                //startup = false;
-                /* TODO: reset background color && make ui inactive .. */
             }
             Color newColor = backgroundimage.color;
             newColor.a = a;
@@ -417,6 +454,7 @@ public class MandleBrotZoom : MonoBehaviour
             backgroundimage.color = newColor;
             startup = false;
         }
+*/
     }
 
     // Update is called once per frame
@@ -514,13 +552,33 @@ public class MandleBrotZoom : MonoBehaviour
                 touchmoving = true;
                 touchfading = false;
 
+                //float currentdistance = Vector2.Distance(touch0.position, touch1.position);
+
                 if (touch0.phase == TouchPhase.Began || touch1.phase == TouchPhase.Began) {
-                    initialtouchdistance = Vector2.Distance(touch0.position, touch1.position);
+                    initialtouchdistance = currentdistance;
                 } else if (touch0.phase == TouchPhase.Moved || touch1.phase == TouchPhase.Moved) {
                     // TODO: not sure if this is correct
-                    float zoomfactor = currentdistance / initialtouchdistance;
-                    scint -= Time.deltaTime * Mathf.Log(zoomfactor);
+                    /* Try 1 is okay */
+                    float zoomfactor = (currentdistance / initialtouchdistance);
+                    scint -= (Time.deltaTime * Mathf.Log(zoomfactor)) * 25f;
                     scint_changed = true;
+                    initialtouchdistance = currentdistance;
+                    /*
+                    float delta = currentdistance - initialtouchdistance * Mathf.Exp(scint) * 0.000070f;
+                    scint -= delta;
+                    scint_changed = true;
+                    */
+
+
+                    //scint += zoomfactor;
+                    //scint_changed = true;
+                    /* New scheme!  doesn't work */
+                    /*
+                    float delta = currentdistance - initialtouchdistance;
+                    float zoomfactor = -delta * Mathf.Exp(scint) * 0.0070f;
+                    scint += zoomfactor;
+                    scint_changed = true;
+                    */
                 }
             }
         }
